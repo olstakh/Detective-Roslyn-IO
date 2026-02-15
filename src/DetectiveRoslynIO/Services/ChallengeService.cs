@@ -96,4 +96,32 @@ public class ChallengeService : IChallengeService
             .OrderBy(h => h.OrderIndex)
             .ToListAsync();
     }
+
+    public async Task<List<ChallengeTrack>> GetActiveTracksAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.ChallengeTracks
+            .Where(t => t.IsActive)
+            .OrderBy(t => t.OrderIndex)
+            .Include(t => t.Challenges)
+            .ToListAsync();
+    }
+
+    public async Task<ChallengeTrack?> GetTrackByIdAsync(int trackId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.ChallengeTracks
+            .Include(t => t.Challenges.OrderBy(c => c.SequenceNumber))
+            .FirstOrDefaultAsync(t => t.Id == trackId);
+    }
+
+    public async Task<List<Challenge>> GetChallengesByTrackAsync(int trackId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.Challenges
+            .Where(c => c.TrackId == trackId && c.IsActive)
+            .OrderBy(c => c.SequenceNumber)
+            .Include(c => c.Hints)
+            .ToListAsync();
+    }
 }

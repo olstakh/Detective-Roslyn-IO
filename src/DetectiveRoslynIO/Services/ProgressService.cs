@@ -8,10 +8,12 @@ namespace DetectiveRoslynIO.Services;
 public class ProgressService : IProgressService
 {
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+    private readonly IUnlockService _unlockService;
 
-    public ProgressService(IDbContextFactory<ApplicationDbContext> contextFactory)
+    public ProgressService(IDbContextFactory<ApplicationDbContext> contextFactory, IUnlockService unlockService)
     {
         _contextFactory = contextFactory;
+        _unlockService = unlockService;
     }
 
     public async Task<UserProgressViewModel> GetUserProgressAsync(string userId)
@@ -76,6 +78,10 @@ public class ProgressService : IProgressService
             };
             context.UserProgress.Add(progress);
             await context.SaveChangesAsync();
+
+            // Trigger next challenge unlock
+            await _unlockService.UnlockNextChallengeAsync(userId, challengeId);
+
             return true;
         }
 
@@ -85,6 +91,10 @@ public class ProgressService : IProgressService
             progress.CompletedAt = DateTime.UtcNow;
             progress.TotalAttempts++;
             await context.SaveChangesAsync();
+
+            // Trigger next challenge unlock
+            await _unlockService.UnlockNextChallengeAsync(userId, challengeId);
+
             return true;
         }
 

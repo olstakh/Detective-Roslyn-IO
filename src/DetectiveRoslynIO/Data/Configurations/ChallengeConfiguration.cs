@@ -53,5 +53,6 @@ public class ChallengeConfiguration : IEntityTypeConfiguration<Challenge>
         builder.HasIndex(c => c.OrderIndex);
         builder.HasIndex(c => c.Category);
         builder.HasIndex(c => c.Difficulty);
+        builder.HasIndex(c => new { c.TrackId, c.SequenceNumber });
     }
 }

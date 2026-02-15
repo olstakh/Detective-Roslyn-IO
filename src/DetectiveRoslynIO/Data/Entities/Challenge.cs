@@ -18,7 +18,10 @@ public class Challenge
     public int OrderIndex { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int? TrackId { get; set; }
+    public int SequenceNumber { get; set; }
 
+    public ChallengeTrack? Track { get; set; }
     public ICollection<Hint> Hints { get; set; } = new List<Hint>();
     public ICollection<UserSubmission> Submissions { get; set; } = new List<UserSubmission>();
     public ICollection<UserProgress> UserProgress { get; set; } = new List<UserProgress>();
