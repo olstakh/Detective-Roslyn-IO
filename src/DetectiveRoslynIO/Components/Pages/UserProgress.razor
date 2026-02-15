@@ -1,5 +1,6 @@
 @page "/progress"
 @attribute [Authorize]
+@layout DetectiveLayout
 @inject IProgressService ProgressService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -44,7 +45,7 @@ else
         <div class="card-body">
             @if (!progressData.Challenges.Any())
             {
-                <p>No challenges attempted yet. <a href="/challenges">Start your first challenge!</a></p>
+                <p>No challenges attempted yet. <a href="/detective/inbox">Start your first challenge!</a></p>
             }
             else
             {
@@ -66,7 +67,7 @@ else
                             {
                                 <tr class="@(item.IsCompleted ? "table-success" : "")">
                                     <td>
-                                        <a href="/challenges/@item.Challenge.Id">@item.Challenge.Title</a>
+                                        <a href="/detective/case/@item.Challenge.Id">@item.Challenge.Title</a>
                                     </td>
                                     <td>
                                         <CategoryBadge Category="item.Challenge.Category" />
