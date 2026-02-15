@@ -20,9 +20,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Configure Identity
@@ -49,6 +46,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<IProgressService, ProgressService>();
+builder.Services.AddScoped<IUnlockService, UnlockService>();
 builder.Services.AddScoped<SeedDataService>();
 
 // Add authentication state
@@ -62,7 +60,8 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
+        var contextFactory = services.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+        await using var context = await contextFactory.CreateDbContextAsync();
         await context.Database.MigrateAsync();
 
         var seedService = services.GetRequiredService<SeedDataService>();
@@ -94,7 +93,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies();
 
 // Map authentication endpoints
 app.MapAccountEndpoints();

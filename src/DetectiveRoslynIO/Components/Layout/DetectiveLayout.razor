@@ -1,0 +1,165 @@
+@inherits LayoutComponentBase
+@using DetectiveRoslynIO.Services
+@using DetectiveRoslynIO.Data.Entities
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IChallengeService ChallengeService
+@inject IUnlockService UnlockService
+@inject IProgressService ProgressService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<div class="detective-layout">
+    <!-- Sidebar -->
+    <div class="detective-sidebar" id="detectiveSidebar">
+        <div class="sidebar-header">
+            <h4 class="mb-0">
+                <i class="bi bi-search"></i> Detective Roslyn
+            </h4>
+        </div>
+
+        <div class="sidebar-content">
+            <!-- Inbox Button -->
+            <a href="/detective/inbox" class="btn btn-detective w-100 mb-3">
+                <i class="bi bi-inbox"></i> Inbox
+            </a>
+
+            <!-- Track Selector -->
+            @if (_tracks != null && _tracks.Any())
+            {
+                <div class="mb-3">
+                    <label class="form-label text-light">Track</label>
+                    <select class="form-select form-select-dark" @onchange="OnTrackChanged">
+                        @foreach (var track in _tracks)
+                        {
+                            <option value="@track.Id" selected="@(track.Id == _selectedTrackId)">
+                                @track.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Case List -->
+                @if (_challenges != null)
+                {
+                    <div class="case-list">
+                        <h6 class="text-muted mb-2">Cases</h6>
+                        @foreach (var challenge in _challenges)
+                        {
+                            var isUnlocked = _unlockStatus.GetValueOrDefault(challenge.Id, false);
+                            var isCompleted = _completionStatus.GetValueOrDefault(challenge.Id, false);
+                            var cssClass = $"case-item {(isUnlocked ? "" : "locked")} {(isCompleted ? "completed" : "")}";
+
+                            @if (isUnlocked)
+                            {
+                                <a href="/detective/case/@challenge.Id" class="@cssClass">
+                                    <div class="case-number">Case #@challenge.SequenceNumber</div>
+                                    <div class="case-title">@challenge.Title</div>
+                                    @if (isCompleted)
+                                    {
+                                        <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                                    }
+                                </a>
+                            }
+                            else
+                            {
+                                <div class="@cssClass">
+                                    <div class="case-number">Case #@challenge.SequenceNumber</div>
+                                    <div class="case-title">@challenge.Title</div>
+                                    <i class="bi bi-lock-fill text-muted ms-auto"></i>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            }
+
+            <!-- FAQ Button -->
+            <a href="/detective/faq" class="btn btn-outline-light w-100 mt-3">
+                <i class="bi bi-question-circle"></i> FAQ
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="detective-main">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-dark bg-dark mb-4">
+            <div class="container-fluid">
+                <button class="btn btn-dark d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#detectiveSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="ms-auto">
+                    <AuthorizeView>
+                        <Authorized>
+                            <span class="text-light me-3">@context.User.Identity?.Name</span>
+                            <a href="/Account/Logout" class="btn btn-outline-light btn-sm">Logout</a>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="/Account/Login" class="btn btn-outline-light btn-sm">Login</a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ChallengeTrack>? _tracks;
+    private List<Challenge>? _challenges;
+    private int _selectedTrackId;
+    private Dictionary<int, bool> _unlockStatus = new();
+    private Dictionary<int, bool> _completionStatus = new();
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // Load tracks
+            _tracks = await ChallengeService.GetActiveTracksAsync();
+
+            if (_tracks.Any())
+            {
+                _selectedTrackId = _tracks[0].Id;
+                await LoadChallengesForTrack(_selectedTrackId);
+            }
+        }
+    }
+
+    private async Task OnTrackChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var trackId))
+        {
+            _selectedTrackId = trackId;
+            await LoadChallengesForTrack(trackId);
+        }
+    }
+
+    private async Task LoadChallengesForTrack(int trackId)
+    {
+        if (string.IsNullOrEmpty(_userId))
+            return;
+
+        _challenges = await ChallengeService.GetChallengesByTrackAsync(trackId);
+        _unlockStatus = await UnlockService.GetUnlockStatusMapAsync(_userId, trackId);
+
+        // Load completion status
+        var progress = await ProgressService.GetUserProgressAsync(_userId);
+        _completionStatus = progress.Challenges
+            .Where(c => c.IsCompleted)
+            .ToDictionary(c => c.Challenge.Id, c => true);
+
+        StateHasChanged();
+    }
+}

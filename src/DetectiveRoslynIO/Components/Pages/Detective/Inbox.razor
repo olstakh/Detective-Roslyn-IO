@@ -1,0 +1,113 @@
+@page "/detective/inbox"
+@layout DetectiveLayout
+@attribute [Authorize]
+@using DetectiveRoslynIO.Services
+@using DetectiveRoslynIO.Data.Entities
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IChallengeService ChallengeService
+@inject IUnlockService UnlockService
+@inject IProgressService ProgressService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Inbox - Detective Roslyn IO</PageTitle>
+
+<div class="detective-inbox">
+    <h1 class="page-title mb-4">
+        <i class="bi bi-inbox"></i> Case Inbox
+    </h1>
+    <p class="text-muted mb-4">Your available cases are listed below. Complete them to unlock new challenges.</p>
+
+    @if (_isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (_trackGroups.Any())
+    {
+        @foreach (var group in _trackGroups)
+        {
+            <div class="track-section mb-4">
+                <h3 class="track-title">
+                    <i class="@group.Track.IconClass"></i> @group.Track.Name
+                </h3>
+                <p class="text-muted">@group.Track.Description</p>
+
+                <div class="row">
+                    @foreach (var challenge in group.Challenges)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <CaseCard Challenge="challenge" IsCompleted="@_completionStatus.GetValueOrDefault(challenge.Id, false)" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No cases are currently available. Check back later!
+        </div>
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private List<TrackGroup> _trackGroups = new();
+    private Dictionary<int, bool> _completionStatus = new();
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(_userId))
+            {
+                await LoadUnlockedChallenges();
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task LoadUnlockedChallenges()
+    {
+        if (string.IsNullOrEmpty(_userId))
+            return;
+
+        // Get all unlocked challenges
+        var unlockedChallenges = await UnlockService.GetUnlockedChallengesAsync(_userId);
+
+        // Get completion status
+        var progress = await ProgressService.GetUserProgressAsync(_userId);
+        _completionStatus = progress.Challenges
+            .Where(c => c.IsCompleted)
+            .ToDictionary(c => c.Challenge.Id, c => true);
+
+        // Group by track
+        _trackGroups = unlockedChallenges
+            .Where(c => c.Track != null)
+            .GroupBy(c => c.Track!)
+            .Select(g => new TrackGroup
+            {
+                Track = g.Key,
+                Challenges = g.OrderBy(c => c.SequenceNumber).ToList()
+            })
+            .OrderBy(g => g.Track.OrderIndex)
+            .ToList();
+    }
+
+    private class TrackGroup
+    {
+        public ChallengeTrack Track { get; set; } = null!;
+        public List<Challenge> Challenges { get; set; } = new();
+    }
+}

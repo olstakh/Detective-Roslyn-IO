@@ -8,25 +8,30 @@ namespace DetectiveRoslynIO.Services;
 
 public class SeedDataService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IUnlockService _unlockService;
 
     public SeedDataService(
-        ApplicationDbContext context,
+        IDbContextFactory<ApplicationDbContext> contextFactory,
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        IUnlockService unlockService)
     {
-        _context = context;
+        _contextFactory = contextFactory;
         _userManager = userManager;
         _roleManager = roleManager;
+        _unlockService = unlockService;
     }
 
     public async Task SeedAsync()
     {
         await SeedRolesAsync();
         await SeedAdminUserAsync();
+        await SeedTracksAsync();
         await SeedChallengesAsync();
+        await MigrateExistingUsersAsync();
     }
 
     private async Task SeedRolesAsync()
@@ -66,13 +71,50 @@ public class SeedDataService
         }
     }
 
-    private async Task SeedChallengesAsync()
+    private async Task SeedTracksAsync()
     {
-        if (await _context.Challenges.AnyAsync())
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        if (await context.ChallengeTracks.AnyAsync())
         {
             return; // Already seeded
         }
 
+        var track = new ChallengeTrack
+        {
+            Name = "Analyzer Fundamentals",
+            Description = "Learn the basics of creating Roslyn analyzers by detecting common code issues and patterns.",
+            IconClass = "bi-search",
+            OrderIndex = 1,
+            IsActive = true
+        };
+
+        context.ChallengeTracks.Add(track);
+        await context.SaveChangesAsync();
+    }
+
+    private async Task SeedChallengesAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        if (await context.Challenges.AnyAsync())
+        {
+            // Update existing challenges to assign track
+            var existingTrack = await context.ChallengeTracks.FirstOrDefaultAsync();
+            if (existingTrack != null)
+            {
+                var existingChallenges = await context.Challenges.OrderBy(c => c.OrderIndex).ToListAsync();
+                for (int i = 0; i < existingChallenges.Count; i++)
+                {
+                    existingChallenges[i].TrackId = existingTrack.Id;
+                    existingChallenges[i].SequenceNumber = i + 1;
+                }
+                await context.SaveChangesAsync();
+            }
+            return; // Already seeded
+        }
+
+        var track = await context.ChallengeTracks.FirstAsync();
         var challenges = new[]
         {
             new Challenge
@@ -93,6 +135,8 @@ public class SeedDataService
                 CaseSensitive = false,
                 RoslynDocsUrl = "https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/",
                 OrderIndex = 1,
+                TrackId = track.Id,
+                SequenceNumber = 1,
                 IsActive = true
             },
             new Challenge
@@ -113,6 +157,8 @@ public class SeedDataService
                 CaseSensitive = false,
                 RoslynDocsUrl = "https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/get-started/syntax-analysis",
                 OrderIndex = 2,
+                TrackId = track.Id,
+                SequenceNumber = 2,
                 IsActive = true
             },
             new Challenge
@@ -133,12 +179,14 @@ public class SeedDataService
                 CaseSensitive = false,
                 RoslynDocsUrl = "https://learn.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/tutorials/how-to-write-csharp-analyzer-code-fix",
                 OrderIndex = 3,
+                TrackId = track.Id,
+                SequenceNumber = 3,
                 IsActive = true
             }
         };
 
-        _context.Challenges.AddRange(challenges);
-        await _context.SaveChangesAsync();
+        context.Challenges.AddRange(challenges);
+        await context.SaveChangesAsync();
 
         // Add hints for the first challenge
         var firstChallenge = challenges[0];
@@ -164,7 +212,35 @@ public class SeedDataService
             }
         };
 
-        _context.Hints.AddRange(hints);
-        await _context.SaveChangesAsync();
+        context.Hints.AddRange(hints);
+        await context.SaveChangesAsync();
+    }
+
+    private async Task MigrateExistingUsersAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        // Get all users
+        var users = await context.Users.ToListAsync();
+
+        // Get all first challenges in each track
+        var firstChallenges = await context.Challenges
+            .Where(c => c.SequenceNumber == 1 && c.TrackId.HasValue && c.IsActive)
+            .ToListAsync();
+
+        // Unlock first challenges for each user if not already unlocked
+        foreach (var user in users)
+        {
+            foreach (var challenge in firstChallenges)
+            {
+                var existingUnlock = await context.UserChallengeUnlocks
+                    .FirstOrDefaultAsync(u => u.UserId == user.Id && u.ChallengeId == challenge.Id);
+
+                if (existingUnlock == null)
+                {
+                    await _unlockService.UnlockChallengeAsync(user.Id, challenge.Id, isAutoUnlock: true);
+                }
+            }
+        }
     }
 }

@@ -1,5 +1,8 @@
 @page "/"
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IChallengeService ChallengeService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Home - Detective Roslyn IO</PageTitle>
 
@@ -8,7 +11,8 @@
     <p class="lead">Master the Roslyn SDK through interactive, gamified challenges</p>
     <hr class="my-4">
     <p>Learn how to build powerful code analyzers, fixes, and source generators by solving progressive challenges.</p>
-    <a class="btn btn-primary btn-lg" href="/challenges" role="button">Start Learning</a>
+    <a class="btn btn-primary btn-lg" href="/Account/Login" role="button">Login to Start</a>
+    <a class="btn btn-outline-primary btn-lg ms-2" href="/Account/Register" role="button">Register</a>
 </div>
 
 <div class="row mb-4">
@@ -69,6 +73,14 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Redirect authenticated users to the detective inbox
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/detective/inbox", forceLoad: true);
+            return;
+        }
+
         var allChallenges = await ChallengeService.GetActiveChallengesAsync();
         recentChallenges = allChallenges.Take(4).ToList();
     }

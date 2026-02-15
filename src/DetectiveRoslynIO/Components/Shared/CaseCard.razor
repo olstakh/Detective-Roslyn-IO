@@ -1,0 +1,33 @@
+@using DetectiveRoslynIO.Data.Entities
+
+@if (Challenge != null)
+{
+    <div class="case-card @(IsCompleted ? "completed" : "")">
+        <div class="case-card-header">
+            <div class="case-badge">Case #@Challenge.SequenceNumber</div>
+            @if (IsCompleted)
+            {
+                <i class="bi bi-check-circle-fill text-success"></i>
+            }
+        </div>
+        <div class="case-card-body">
+            <h4 class="case-title">@Challenge.Title</h4>
+            <p class="case-description">@Challenge.Description</p>
+            <div class="case-meta">
+                <DifficultyBadge Difficulty="Challenge.Difficulty" />
+                <CategoryBadge Category="Challenge.Category" />
+            </div>
+            <a href="/detective/case/@Challenge.Id" class="btn btn-detective mt-3">
+                Investigate Case <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Challenge? Challenge { get; set; }
+
+    [Parameter]
+    public bool IsCompleted { get; set; }
+}

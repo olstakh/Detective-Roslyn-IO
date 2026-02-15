@@ -16,7 +16,10 @@
       "Bash(dotnet msbuild:*)",
       "Bash(dotnet clean:*)",
       "Bash(dotnet --list-sdks:*)",
-      "Bash(dotnet nuget search:*)"
+      "Bash(dotnet nuget search:*)",
+      "Bash(ls:*)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet add package:*)"
     ]
   }
 }

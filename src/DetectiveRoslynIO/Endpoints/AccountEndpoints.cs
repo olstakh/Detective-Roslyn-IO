@@ -1,4 +1,5 @@
 using DetectiveRoslynIO.Data.Entities;
+using DetectiveRoslynIO.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,7 +47,8 @@ public static class AccountEndpoints
         [FromForm] string password,
         [FromForm] string confirmPassword,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        IUnlockService unlockService)
     {
         if (password != confirmPassword)
         {
@@ -65,6 +67,10 @@ public static class AccountEndpoints
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(user, "User");
+
+            // Unlock first challenges in each track for new user
+            await unlockService.UnlockFirstChallengesForNewUserAsync(user.Id);
+
             await signInManager.SignInAsync(user, isPersistent: false);
             return Results.Redirect("/");
         }

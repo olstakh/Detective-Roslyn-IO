@@ -14,4 +14,7 @@ public interface IChallengeService
     Task<Challenge> UpdateChallengeAsync(Challenge challenge);
     Task DeleteChallengeAsync(int id);
     Task<List<Hint>> GetChallengeHintsAsync(int challengeId);
+    Task<List<ChallengeTrack>> GetActiveTracksAsync();
+    Task<ChallengeTrack?> GetTrackByIdAsync(int trackId);
+    Task<List<Challenge>> GetChallengesByTrackAsync(int trackId);
 }

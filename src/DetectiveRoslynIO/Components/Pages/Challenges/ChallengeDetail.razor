@@ -1,5 +1,6 @@
 @page "/challenges/{id:int}"
 @attribute [Authorize]
+@rendermode InteractiveServer
 @inject IChallengeService ChallengeService
 @inject ISubmissionService SubmissionService
 @inject IProgressService ProgressService

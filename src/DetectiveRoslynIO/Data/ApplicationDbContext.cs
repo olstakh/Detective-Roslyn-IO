@@ -16,6 +16,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Hint> Hints => Set<Hint>();
     public DbSet<UserSubmission> UserSubmissions => Set<UserSubmission>();
     public DbSet<UserProgress> UserProgress => Set<UserProgress>();
+    public DbSet<ChallengeTrack> ChallengeTracks => Set<ChallengeTrack>();
+    public DbSet<UserChallengeUnlock> UserChallengeUnlocks => Set<UserChallengeUnlock>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -24,5 +26,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.ApplyConfiguration(new ChallengeConfiguration());
         builder.ApplyConfiguration(new UserSubmissionConfiguration());
         builder.ApplyConfiguration(new UserProgressConfiguration());
+        builder.ApplyConfiguration(new ChallengeTrackConfiguration());
+        builder.ApplyConfiguration(new UserChallengeUnlockConfiguration());
     }
 }

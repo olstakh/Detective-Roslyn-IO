@@ -81,3 +81,406 @@ main {
     margin: 0;
     font-size: 1rem;
 }
+
+/* ============================================
+   DETECTIVE THEME - Dark theme with teal/green accents
+   ============================================ */
+
+:root {
+    --detective-bg-primary: #1a1a2e;
+    --detective-bg-secondary: #16213e;
+    --detective-bg-tertiary: #0f3460;
+    --detective-accent-teal: #00d4aa;
+    --detective-accent-green: #00ff88;
+    --detective-text-primary: #e8e8e8;
+    --detective-text-secondary: #a0a0a0;
+    --detective-border: #2d3748;
+    --detective-hover: #1f2937;
+}
+
+/* Detective Layout */
+.detective-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--detective-bg-primary);
+}
+
+.detective-sidebar {
+    width: 280px;
+    background-color: var(--detective-bg-secondary);
+    border-right: 1px solid var(--detective-border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.detective-sidebar .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--detective-border);
+    color: var(--detective-text-primary);
+}
+
+.detective-sidebar .sidebar-header h4 {
+    color: var(--detective-accent-teal);
+}
+
+.detective-sidebar .sidebar-content {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.detective-main {
+    flex: 1;
+    margin-left: 280px;
+    background-color: var(--detective-bg-primary);
+    color: var(--detective-text-primary);
+    min-height: 100vh;
+}
+
+/* Form select dark theme */
+.form-select-dark {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-border);
+}
+
+.form-select-dark:focus {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-accent-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+
+/* Case items in sidebar */
+.case-list {
+    margin-top: 1rem;
+}
+
+.case-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--detective-bg-tertiary);
+    border-radius: 0.5rem;
+    color: var(--detective-text-primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.case-item:hover {
+    background-color: var(--detective-hover);
+    transform: translateX(5px);
+}
+
+.case-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.case-item.locked:hover {
+    transform: none;
+}
+
+.case-item.completed {
+    border-left: 4px solid var(--detective-accent-green);
+}
+
+.case-item .case-number {
+    font-size: 0.75rem;
+    color: var(--detective-accent-teal);
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.case-item .case-title {
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+/* Detective buttons */
+.btn-detective {
+    background-color: var(--detective-accent-teal);
+    color: #1a1a2e;
+    border: none;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-detective:hover {
+    background-color: var(--detective-accent-green);
+    color: #1a1a2e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+}
+
+/* Case cards */
+.case-card {
+    background-color: var(--detective-bg-secondary);
+    border: 1px solid var(--detective-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.case-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 212, 170, 0.2);
+    border-color: var(--detective-accent-teal);
+}
+
+.case-card-header {
+    background-color: var(--detective-bg-tertiary);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--detective-border);
+}
+
+.case-badge {
+    background-color: var(--detective-accent-teal);
+    color: #1a1a2e;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.case-badge-large {
+    background-color: var(--detective-accent-teal);
+    color: #1a1a2e;
+    padding: 0.5rem 1.5rem;
+    border-radius: 1.5rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.case-card-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.case-title {
+    color: var(--detective-text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.case-description {
+    color: var(--detective-text-secondary);
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+.case-meta {
+    margin-bottom: 1rem;
+}
+
+/* Case detail page */
+.case-detail-card {
+    background-color: var(--detective-bg-secondary);
+    border: 1px solid var(--detective-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.case-detail-header {
+    background: linear-gradient(135deg, var(--detective-bg-tertiary) 0%, var(--detective-bg-secondary) 100%);
+    padding: 2rem;
+    border-bottom: 1px solid var(--detective-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.case-detail-title {
+    color: var(--detective-text-primary);
+    margin-bottom: 0;
+}
+
+.case-detail-body {
+    padding: 2rem;
+}
+
+.case-detail-body h4 {
+    color: var(--detective-accent-teal);
+    margin-bottom: 1rem;
+}
+
+.case-detail-body section {
+    color: var(--detective-text-primary);
+}
+
+.case-instructions {
+    background-color: var(--detective-bg-tertiary);
+    padding: 1rem;
+    border-left: 4px solid var(--detective-accent-teal);
+    border-radius: 0.25rem;
+    white-space: pre-line;
+    color: var(--detective-text-primary);
+}
+
+/* Submission section */
+.submission-section {
+    background-color: var(--detective-bg-secondary);
+    border: 1px solid var(--detective-border);
+    padding: 2rem;
+    border-radius: 0.75rem;
+}
+
+.submission-section h4 {
+    color: var(--detective-accent-teal);
+    margin-bottom: 1rem;
+}
+
+.submission-section .form-control {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-border);
+}
+
+.submission-section .form-control:focus {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-accent-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+
+.submission-section .form-label {
+    color: var(--detective-text-primary);
+}
+
+/* Page title */
+.page-title {
+    color: var(--detective-accent-teal);
+}
+
+/* Track section */
+.track-section {
+    margin-bottom: 3rem;
+}
+
+.track-title {
+    color: var(--detective-accent-teal);
+    border-bottom: 2px solid var(--detective-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Hints section */
+.hints-section .accordion {
+    background-color: var(--detective-bg-secondary);
+}
+
+.hints-section .accordion-item {
+    background-color: var(--detective-bg-tertiary);
+    border-color: var(--detective-border);
+}
+
+.hints-section .accordion-button {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-border);
+}
+
+.hints-section .accordion-button:not(.collapsed) {
+    background-color: var(--detective-bg-secondary);
+    color: var(--detective-accent-teal);
+}
+
+.hints-section .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+
+.hints-section .accordion-body {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+}
+
+/* Alert overrides for detective theme */
+.detective-layout .alert-success {
+    background-color: rgba(0, 255, 136, 0.1);
+    border-color: var(--detective-accent-green);
+    color: var(--detective-accent-green);
+}
+
+.detective-layout .alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #ff6b6b;
+}
+
+.detective-layout .alert-info {
+    background-color: rgba(0, 212, 170, 0.1);
+    border-color: var(--detective-accent-teal);
+    color: var(--detective-accent-teal);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .detective-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .detective-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .detective-main {
+        margin-left: 0;
+    }
+}
+
+/* Dark theme for forms and inputs */
+.detective-layout .form-control,
+.detective-layout .form-select {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-border);
+}
+
+.detective-layout .form-control:focus,
+.detective-layout .form-select:focus {
+    background-color: var(--detective-bg-tertiary);
+    color: var(--detective-text-primary);
+    border-color: var(--detective-accent-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 212, 170, 0.25);
+}
+
+.detective-layout .text-muted {
+    color: var(--detective-text-secondary) !important;
+}
+
+/* Cards in detective theme */
+.detective-layout .card {
+    background-color: var(--detective-bg-secondary);
+    border-color: var(--detective-border);
+    color: var(--detective-text-primary);
+}
+
+.detective-layout .card-header {
+    background-color: var(--detective-bg-tertiary);
+    border-color: var(--detective-border);
+    color: var(--detective-text-primary);
+}
+
+.detective-layout .card-body {
+    color: var(--detective-text-primary);
+}
