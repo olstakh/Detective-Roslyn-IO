@@ -1,0 +1,130 @@
+@page "/progress"
+@attribute [Authorize]
+@inject IProgressService ProgressService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>My Progress - Detective Roslyn IO</PageTitle>
+
+<h1>My Progress</h1>
+
+@if (progressData == null)
+{
+    <p>Loading progress...</p>
+}
+else
+{
+    <div class="progress-stats mb-4">
+        <h2>Your Statistics</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-box">
+                    <h3>@progressData.CompletedChallenges</h3>
+                    <p>Challenges Completed</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box">
+                    <h3>@progressData.TotalChallenges</h3>
+                    <p>Total Challenges</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box">
+                    <h3>@completionPercentage%</h3>
+                    <p>Completion Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="mb-0">Challenge Progress</h3>
+        </div>
+        <div class="card-body">
+            @if (!progressData.Challenges.Any())
+            {
+                <p>No challenges attempted yet. <a href="/challenges">Start your first challenge!</a></p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Challenge</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                                <th>Status</th>
+                                <th>Attempts</th>
+                                <th>Hints Used</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in progressData.Challenges)
+                            {
+                                <tr class="@(item.IsCompleted ? "table-success" : "")">
+                                    <td>
+                                        <a href="/challenges/@item.Challenge.Id">@item.Challenge.Title</a>
+                                    </td>
+                                    <td>
+                                        <CategoryBadge Category="item.Challenge.Category" />
+                                    </td>
+                                    <td>
+                                        <DifficultyBadge Difficulty="item.Challenge.Difficulty" />
+                                    </td>
+                                    <td>
+                                        @if (item.IsCompleted)
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                        else if (item.TotalAttempts > 0)
+                                        {
+                                            <span class="badge bg-warning">In Progress</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Not Started</span>
+                                        }
+                                    </td>
+                                    <td>@item.TotalAttempts</td>
+                                    <td>@item.HintsUsed</td>
+                                    <td>
+                                        @if (item.CompletedAt.HasValue)
+                                        {
+                                            @item.CompletedAt.Value.ToString("MMM dd, yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private UserProgressViewModel? progressData;
+    private int completionPercentage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            progressData = await ProgressService.GetUserProgressAsync(userId);
+            completionPercentage = progressData.TotalChallenges > 0
+                ? (int)((double)progressData.CompletedChallenges / progressData.TotalChallenges * 100)
+                : 0;
+        }
+    }
+}

@@ -52,3 +52,17 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+*.sln.iml

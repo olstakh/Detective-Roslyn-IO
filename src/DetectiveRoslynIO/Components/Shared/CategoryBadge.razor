@@ -1,0 +1,16 @@
+@{
+    var badgeClass = Category switch
+    {
+        ChallengeCategory.Analyzer => "bg-primary",
+        ChallengeCategory.CodeFix => "bg-info",
+        ChallengeCategory.SourceGenerator => "bg-secondary",
+        _ => "bg-secondary"
+    };
+}
+
+<span class="badge @badgeClass">@Category</span>
+
+@code {
+    [Parameter]
+    public ChallengeCategory Category { get; set; }
+}

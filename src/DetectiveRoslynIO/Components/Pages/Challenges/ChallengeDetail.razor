@@ -1,0 +1,182 @@
+@page "/challenges/{id:int}"
+@attribute [Authorize]
+@inject IChallengeService ChallengeService
+@inject ISubmissionService SubmissionService
+@inject IProgressService ProgressService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>@(challenge?.Title ?? "Challenge") - Detective Roslyn IO</PageTitle>
+
+@if (challenge == null)
+{
+    <p>Loading challenge...</p>
+}
+else
+{
+    <div class="mb-3">
+        <a href="/challenges" class="btn btn-outline-secondary btn-sm">&larr; Back to Challenges</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">@challenge.Title</h1>
+                <div>
+                    <DifficultyBadge Difficulty="challenge.Difficulty" />
+                    <CategoryBadge Category="challenge.Category" />
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <h5>Description</h5>
+            <p>@challenge.Description</p>
+
+            <h5>Instructions</h5>
+            <div class="challenge-instructions">
+                @challenge.Instructions
+            </div>
+
+            <h5>Target Repository</h5>
+            <p>
+                <a href="@challenge.TargetRepoUrl" target="_blank" class="btn btn-outline-primary">
+                    Clone Repository
+                </a>
+            </p>
+
+            @if (!string.IsNullOrEmpty(challenge.RoslynDocsUrl))
+            {
+                <h5>Reference Documentation</h5>
+                <p>
+                    <a href="@challenge.RoslynDocsUrl" target="_blank">Roslyn SDK Documentation</a>
+                </p>
+            }
+        </div>
+    </div>
+
+    @if (challenge.Hints.Any())
+    {
+        <HintAccordion Hints="challenge.Hints.ToList()" OnHintViewed="OnHintViewed" />
+    }
+
+    @if (progress != null && progress.IsCompleted)
+    {
+        <div class="alert alert-success">
+            <strong>Completed!</strong> You solved this challenge on @progress.CompletedAt?.ToString("MMM dd, yyyy").
+            Total attempts: @progress.TotalAttempts
+        </div>
+    }
+
+    <div class="submission-form">
+        <h4>Submit Your Answer</h4>
+        @if (!string.IsNullOrEmpty(submissionMessage))
+        {
+            <div class="alert @(submissionResult?.IsCorrect == true ? "alert-success" : "alert-danger")">
+                @submissionMessage
+                @if (submissionResult?.IsCorrect == true && submissionResult.IsFirstCorrectSubmission)
+                {
+                    <div class="mt-2">
+                        <strong>Congratulations!</strong> This is your first time solving this challenge!
+                    </div>
+                }
+            </div>
+        }
+
+        <EditForm Model="submissionRequest" OnValidSubmit="HandleSubmit">
+            <div class="mb-3">
+                <label class="form-label">Answer:</label>
+                <InputText @bind-Value="submissionRequest.Answer" class="form-control" placeholder="Enter your answer" />
+            </div>
+            <div class="mb-3">
+                <small class="text-muted">Answer format: @challenge.AnswerFormat</small>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Submit Answer
+            </button>
+        </EditForm>
+    </div>
+
+    @if (progress != null)
+    {
+        <div class="mt-3">
+            <small class="text-muted">
+                Attempts: @progress.TotalAttempts | Hints used: @progress.HintsUsed
+            </small>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Challenge? challenge;
+    private UserProgress? progress;
+    private SubmissionRequest submissionRequest = new() { Answer = "" };
+    private SubmissionResult? submissionResult;
+    private string? submissionMessage;
+    private bool isSubmitting;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        challenge = await ChallengeService.GetChallengeByIdAsync(Id);
+
+        if (challenge == null)
+        {
+            Navigation.NavigateTo("/challenges");
+            return;
+        }
+
+        submissionRequest.ChallengeId = Id;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId != null)
+        {
+            progress = await ProgressService.GetChallengeProgressAsync(userId, Id);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(submissionRequest.Answer) || userId == null)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        submissionMessage = null;
+
+        try
+        {
+            submissionResult = await SubmissionService.SubmitAnswerAsync(userId, submissionRequest);
+            submissionMessage = submissionResult.Message;
+
+            progress = await ProgressService.GetChallengeProgressAsync(userId, Id);
+            submissionRequest.Answer = "";
+        }
+        catch (Exception ex)
+        {
+            submissionMessage = $"Error submitting answer: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task OnHintViewed()
+    {
+        if (userId != null)
+        {
+            await ProgressService.IncrementHintUsageAsync(userId, Id);
+            progress = await ProgressService.GetChallengeProgressAsync(userId, Id);
+        }
+    }
+}

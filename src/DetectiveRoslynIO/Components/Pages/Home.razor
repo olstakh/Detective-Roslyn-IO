@@ -1,0 +1,75 @@
+@page "/"
+@inject IChallengeService ChallengeService
+
+<PageTitle>Home - Detective Roslyn IO</PageTitle>
+
+<div class="jumbotron bg-light p-5 rounded mb-4">
+    <h1 class="display-4">Welcome to Detective Roslyn IO</h1>
+    <p class="lead">Master the Roslyn SDK through interactive, gamified challenges</p>
+    <hr class="my-4">
+    <p>Learn how to build powerful code analyzers, fixes, and source generators by solving progressive challenges.</p>
+    <a class="btn btn-primary btn-lg" href="/challenges" role="button">Start Learning</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">📊 Analyzers</h5>
+                <p class="card-text">Learn to detect code issues and patterns by building diagnostic analyzers.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🔧 Code Fixes</h5>
+                <p class="card-text">Master code transformations by creating automated fixes for detected issues.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">⚙️ Source Generators</h5>
+                <p class="card-text">Generate code at compile-time and boost productivity with source generators.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h3>Getting Started</h3>
+        <ol>
+            <li>Browse the available challenges and select one that matches your skill level</li>
+            <li>Clone the target repository mentioned in the challenge description</li>
+            <li>Write your Roslyn analyzer, code fix, or source generator locally</li>
+            <li>Run your solution and note the results</li>
+            <li>Submit your answer through the portal to track your progress</li>
+        </ol>
+    </div>
+</div>
+
+@if (recentChallenges != null && recentChallenges.Any())
+{
+    <h3 class="mb-3">Recent Challenges</h3>
+    <div class="row">
+        @foreach (var challenge in recentChallenges)
+        {
+            <div class="col-md-6 mb-3">
+                <ChallengeCard Challenge="challenge" IsCompleted="false" />
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Challenge>? recentChallenges;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allChallenges = await ChallengeService.GetActiveChallengesAsync();
+        recentChallenges = allChallenges.Take(4).ToList();
+    }
+}

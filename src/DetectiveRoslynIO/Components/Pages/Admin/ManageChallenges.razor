@@ -1,0 +1,94 @@
+@page "/admin/challenges"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@inject IChallengeService ChallengeService
+@inject NavigationManager Navigation
+
+<PageTitle>Manage Challenges - Admin</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Manage Challenges</h1>
+    <a href="/admin/challenges/create" class="btn btn-primary">Create New Challenge</a>
+</div>
+
+@if (challenges == null)
+{
+    <p>Loading challenges...</p>
+}
+else if (!challenges.Any())
+{
+    <div class="alert alert-info">No challenges found. Create your first challenge!</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Difficulty</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var challenge in challenges)
+                {
+                    <tr>
+                        <td>@challenge.OrderIndex</td>
+                        <td>@challenge.Title</td>
+                        <td><CategoryBadge Category="challenge.Category" /></td>
+                        <td><DifficultyBadge Difficulty="challenge.Difficulty" /></td>
+                        <td>
+                            @if (challenge.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td>@challenge.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td>
+                            <a href="/admin/challenges/edit/@challenge.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteChallenge(challenge.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Challenge>? challenges;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChallenges();
+    }
+
+    private async Task LoadChallenges()
+    {
+        challenges = await ChallengeService.GetAllChallengesAsync();
+    }
+
+    private async Task DeleteChallenge(int id)
+    {
+        if (confirm($"Are you sure you want to delete this challenge?"))
+        {
+            await ChallengeService.DeleteChallengeAsync(id);
+            await LoadChallenges();
+        }
+    }
+
+    private bool confirm(string message)
+    {
+        // In a real application, use JSInterop for confirmation dialog
+        return true;
+    }
+}

@@ -1,0 +1,17 @@
+@page "/Account/Logout"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Logout - Detective Roslyn IO</PageTitle>
+
+<div class="text-center mt-5">
+    <h3>Logging out...</h3>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

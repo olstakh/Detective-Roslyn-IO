@@ -1,0 +1,114 @@
+@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@inject IChallengeService ChallengeService
+@inject ISubmissionService SubmissionService
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Dashboard - Detective Roslyn IO</PageTitle>
+
+<h1>Admin Dashboard</h1>
+
+@if (isLoading)
+{
+    <p>Loading dashboard data...</p>
+}
+else
+{
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h3>@totalChallenges</h3>
+                    <p>Total Challenges</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h3>@activeChallenges</h3>
+                    <p>Active Challenges</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h3>@totalSubmissions</h3>
+                    <p>Total Submissions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h3>@(challenges?.Count(c => c.Category == ChallengeCategory.Analyzer) ?? 0)</h3>
+                    <p>Analyzer Challenges</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="/admin/challenges/create" class="btn btn-primary mb-2 d-block">Create New Challenge</a>
+                    <a href="/admin/challenges" class="btn btn-outline-primary d-block">Manage Challenges</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Challenge Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Analyzers</span>
+                            <span class="badge bg-primary">@(challenges?.Count(c => c.Category == ChallengeCategory.Analyzer) ?? 0)</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Code Fixes</span>
+                            <span class="badge bg-info">@(challenges?.Count(c => c.Category == ChallengeCategory.CodeFix) ?? 0)</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Source Generators</span>
+                            <span class="badge bg-secondary">@(challenges?.Count(c => c.Category == ChallengeCategory.SourceGenerator) ?? 0)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private List<Challenge>? challenges;
+    private int totalChallenges;
+    private int activeChallenges;
+    private int totalSubmissions;
+
+    protected override async Task OnInitializedAsync()
+    {
+        challenges = await ChallengeService.GetAllChallengesAsync();
+        totalChallenges = challenges.Count;
+        activeChallenges = challenges.Count(c => c.IsActive);
+
+        // Get total submissions count (simplified)
+        totalSubmissions = 0;
+        foreach (var challenge in challenges)
+        {
+            var submissions = await SubmissionService.GetChallengeSubmissionsAsync(challenge.Id);
+            totalSubmissions += submissions.Count;
+        }
+
+        isLoading = false;
+    }
+}

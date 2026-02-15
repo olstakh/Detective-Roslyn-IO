@@ -1,0 +1,155 @@
+@page "/admin/challenges/edit/{id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminLayout
+@inject IChallengeService ChallengeService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Challenge - Admin</PageTitle>
+
+<h1>Edit Challenge</h1>
+
+@if (challenge == null)
+{
+    <p>Loading challenge...</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <EditForm Model="challenge" OnValidSubmit="HandleSubmit">
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <InputText @bind-Value="challenge.Title" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <InputTextArea @bind-Value="challenge.Description" class="form-control" rows="3" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Instructions</label>
+                    <InputTextArea @bind-Value="challenge.Instructions" class="form-control" rows="6" />
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <InputSelect @bind-Value="challenge.Category" class="form-select">
+                            <option value="@ChallengeCategory.Analyzer">Analyzer</option>
+                            <option value="@ChallengeCategory.CodeFix">Code Fix</option>
+                            <option value="@ChallengeCategory.SourceGenerator">Source Generator</option>
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Difficulty</label>
+                        <InputSelect @bind-Value="challenge.Difficulty" class="form-select">
+                            <option value="@DifficultyLevel.Beginner">Beginner</option>
+                            <option value="@DifficultyLevel.Intermediate">Intermediate</option>
+                            <option value="@DifficultyLevel.Advanced">Advanced</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Target Repository URL</label>
+                    <InputText @bind-Value="challenge.TargetRepoUrl" class="form-control" />
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Expected Answer</label>
+                        <InputText @bind-Value="challenge.ExpectedAnswer" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Answer Format</label>
+                        <InputSelect @bind-Value="challenge.AnswerFormat" class="form-select">
+                            <option value="text">Text</option>
+                            <option value="number">Number</option>
+                            <option value="comma-separated">Comma Separated</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <InputCheckbox @bind-Value="challenge.CaseSensitive" class="form-check-input" id="caseSensitive" />
+                        <label class="form-check-label" for="caseSensitive">
+                            Case Sensitive
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Roslyn Documentation URL (Optional)</label>
+                    <InputText @bind-Value="challenge.RoslynDocsUrl" class="form-control" />
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Order Index</label>
+                        <InputNumber @bind-Value="challenge.OrderIndex" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-4">
+                            <InputCheckbox @bind-Value="challenge.IsActive" class="form-check-input" id="isActive" />
+                            <label class="form-check-label" for="isActive">
+                                Is Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Save Changes
+                    </button>
+                    <a href="/admin/challenges" class="btn btn-outline-secondary ms-2">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Challenge? challenge;
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        challenge = await ChallengeService.GetChallengeByIdAsync(Id);
+
+        if (challenge == null)
+        {
+            Navigation.NavigateTo("/admin/challenges");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (challenge == null) return;
+
+        isSubmitting = true;
+
+        try
+        {
+            await ChallengeService.UpdateChallengeAsync(challenge);
+            Navigation.NavigateTo("/admin/challenges");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating challenge: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

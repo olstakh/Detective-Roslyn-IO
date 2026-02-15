@@ -1,0 +1,16 @@
+@{
+    var badgeClass = Difficulty switch
+    {
+        DifficultyLevel.Beginner => "bg-success",
+        DifficultyLevel.Intermediate => "bg-warning",
+        DifficultyLevel.Advanced => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<span class="badge @badgeClass me-1">@Difficulty</span>
+
+@code {
+    [Parameter]
+    public DifficultyLevel Difficulty { get; set; }
+}
