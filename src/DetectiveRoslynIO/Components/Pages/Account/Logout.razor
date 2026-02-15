@@ -1,17 +1,29 @@
 @page "/Account/Logout"
-@inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
 
 <PageTitle>Logout - Detective Roslyn IO</PageTitle>
 
 <div class="text-center mt-5">
     <h3>Logging out...</h3>
+    <p>Please wait while we log you out...</p>
+
+    <form method="post" action="/api/account/logout" id="logoutForm" style="display: inline;">
+        <button type="submit" class="btn btn-primary mt-3">Click here if you are not redirected</button>
+    </form>
 </div>
 
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        await SignInManager.SignOutAsync();
-        Navigation.NavigateTo("/", forceLoad: true);
+<script suppress-error="BL9992">
+    // Auto-submit the logout form
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', submitLogout);
+    } else {
+        submitLogout();
     }
-}
+
+    function submitLogout() {
+        var form = document.getElementById('logoutForm');
+        if (form) {
+            form.submit();
+        }
+    }
+</script>

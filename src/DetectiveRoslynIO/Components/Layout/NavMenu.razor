@@ -29,7 +29,13 @@
                     @context.User.Identity?.Name
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="/Account/Logout">Logout</a></li>
+                    <li>
+                        <form method="post" action="/api/account/logout" style="margin: 0;">
+                            <button type="submit" class="dropdown-item" style="border: none; background: none; cursor: pointer; text-align: left; width: 100%;">
+                                Logout
+                            </button>
+                        </form>
+                    </li>
                 </ul>
             </li>
         </Authorized>

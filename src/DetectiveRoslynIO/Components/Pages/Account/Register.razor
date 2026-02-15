@@ -1,7 +1,6 @@
 @page "/Account/Register"
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Register - Detective Roslyn IO</PageTitle>
 
@@ -12,30 +11,25 @@
                 <h3>Register</h3>
             </div>
             <div class="card-body">
-                @if (!string.IsNullOrEmpty(errorMessage))
+                @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
-                    <div class="alert alert-danger">@errorMessage</div>
+                    <div class="alert alert-danger">@ErrorMessage</div>
                 }
 
-                <EditForm Model="registerModel" OnValidSubmit="HandleRegister">
-                    <DataAnnotationsValidator />
-
+                <form method="post" action="/api/account/register">
                     <div class="mb-3">
                         <label class="form-label">Display Name</label>
-                        <InputText @bind-Value="registerModel.DisplayName" class="form-control" />
-                        <ValidationMessage For="() => registerModel.DisplayName" />
+                        <input type="text" name="displayName" class="form-control" required />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <InputText @bind-Value="registerModel.Email" class="form-control" type="email" />
-                        <ValidationMessage For="() => registerModel.Email" />
+                        <input type="email" name="email" class="form-control" required />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <InputText @bind-Value="registerModel.Password" class="form-control" type="password" />
-                        <ValidationMessage For="() => registerModel.Password" />
+                        <input type="password" name="password" class="form-control" required />
                         <small class="form-text text-muted">
                             Password must be at least 6 characters and contain uppercase, lowercase, number, and special character.
                         </small>
@@ -43,18 +37,13 @@
 
                     <div class="mb-3">
                         <label class="form-label">Confirm Password</label>
-                        <InputText @bind-Value="registerModel.ConfirmPassword" class="form-control" type="password" />
-                        <ValidationMessage For="() => registerModel.ConfirmPassword" />
+                        <input type="password" name="confirmPassword" class="form-control" required />
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
-                        @if (isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
+                    <button type="submit" class="btn btn-primary w-100">
                         Register
                     </button>
-                </EditForm>
+                </form>
 
                 <hr />
 
@@ -67,58 +56,6 @@
 </div>
 
 @code {
-    private RegisterModel registerModel = new();
-    private string? errorMessage;
-    private bool isSubmitting;
-
-    private async Task HandleRegister()
-    {
-        isSubmitting = true;
-        errorMessage = null;
-
-        try
-        {
-            if (registerModel.Password != registerModel.ConfirmPassword)
-            {
-                errorMessage = "Passwords do not match.";
-                return;
-            }
-
-            var user = new ApplicationUser
-            {
-                UserName = registerModel.Email,
-                Email = registerModel.Email,
-                DisplayName = registerModel.DisplayName
-            };
-
-            var result = await UserManager.CreateAsync(user, registerModel.Password);
-
-            if (result.Succeeded)
-            {
-                await UserManager.AddToRoleAsync(user, "User");
-                await SignInManager.SignInAsync(user, isPersistent: false);
-                Navigation.NavigateTo("/", forceLoad: true);
-            }
-            else
-            {
-                errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private class RegisterModel
-    {
-        public string DisplayName { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-        public string ConfirmPassword { get; set; } = "";
-    }
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? ErrorMessage { get; set; }
 }
