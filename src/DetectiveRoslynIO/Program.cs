@@ -1,6 +1,7 @@
 using DetectiveRoslynIO.Components;
 using DetectiveRoslynIO.Data;
 using DetectiveRoslynIO.Data.Entities;
+using DetectiveRoslynIO.Endpoints;
 using DetectiveRoslynIO.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -94,5 +95,8 @@ app.UseAuthorization();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Map authentication endpoints
+app.MapAccountEndpoints();
 
 app.Run();

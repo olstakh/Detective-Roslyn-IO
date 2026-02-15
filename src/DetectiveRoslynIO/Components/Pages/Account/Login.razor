@@ -1,6 +1,6 @@
 @page "/Account/Login"
-@inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Login - Detective Roslyn IO</PageTitle>
 
@@ -11,41 +11,42 @@
                 <h3>Login</h3>
             </div>
             <div class="card-body">
-                @if (!string.IsNullOrEmpty(errorMessage))
+                @if (registered)
                 {
-                    <div class="alert alert-danger">@errorMessage</div>
+                    <div class="alert alert-success">
+                        Registration successful! Please log in with your credentials.
+                    </div>
                 }
 
-                <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-                    <DataAnnotationsValidator />
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger">@ErrorMessage</div>
+                }
 
+                <form method="post" action="/api/account/login">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <InputText @bind-Value="loginModel.Email" class="form-control" type="email" />
-                        <ValidationMessage For="() => loginModel.Email" />
+                        <input type="email" name="email" class="form-control" value="@Email" required />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
-                        <ValidationMessage For="() => loginModel.Password" />
+                        <input type="password" name="password" class="form-control" required />
                     </div>
 
                     <div class="mb-3 form-check">
-                        <InputCheckbox @bind-Value="loginModel.RememberMe" class="form-check-input" id="rememberMe" />
+                        <input type="checkbox" name="rememberMe" class="form-check-input" id="rememberMe" value="true" />
                         <label class="form-check-label" for="rememberMe">
                             Remember me
                         </label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
-                        @if (isSubmitting)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
+                    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+
+                    <button type="submit" class="btn btn-primary w-100">
                         Login
                     </button>
-                </EditForm>
+                </form>
 
                 <hr />
 
@@ -58,49 +59,15 @@
 </div>
 
 @code {
-    private LoginModel loginModel = new();
-    private string? errorMessage;
-    private bool isSubmitting;
-
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
-    private async Task HandleLogin()
-    {
-        isSubmitting = true;
-        errorMessage = null;
+    [SupplyParameterFromQuery(Name = "registered")]
+    public bool registered { get; set; }
 
-        try
-        {
-            var result = await SignInManager.PasswordSignInAsync(
-                loginModel.Email,
-                loginModel.Password,
-                loginModel.RememberMe,
-                lockoutOnFailure: false);
+    [SupplyParameterFromQuery(Name = "email")]
+    public string? Email { get; set; }
 
-            if (result.Succeeded)
-            {
-                Navigation.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
-            }
-            else
-            {
-                errorMessage = "Invalid login attempt.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    private class LoginModel
-    {
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
-        public bool RememberMe { get; set; }
-    }
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? ErrorMessage { get; set; }
 }

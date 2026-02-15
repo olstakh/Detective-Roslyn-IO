@@ -10,7 +10,13 @@
       "Bash(dotnet restore:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet ef database:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(dotnet list package:*)",
+      "Bash(dotnet --version:*)",
+      "Bash(dotnet msbuild:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet --list-sdks:*)",
+      "Bash(dotnet nuget search:*)"
     ]
   }
 }

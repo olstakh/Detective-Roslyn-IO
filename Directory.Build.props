@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enable Central Package Management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <!-- Disable transitive project references (future-proofing) -->
+    <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+
+    <!-- Enforce explicit declaration of all transitive packages -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+</Project>
